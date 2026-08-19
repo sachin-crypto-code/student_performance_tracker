@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Student Performance Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+
+<body>
+
+
+<!-- ==========================================
+     TOP HEADER
+========================================== -->
+
+<header class="dashboard-header">
+
+    <div class="header-content">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                🎓
+            </div>
+
+            <div>
+
+                <h1>
+                    Student Performance
+                </h1>
+
+                <p>
+                    Analytics Dashboard
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="header-status">
+
+            <span class="status-dot"></span>
+
+            Dashboard Active
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<div class="container">
+
+
+<!-- ==========================================
+     SUCCESS MESSAGE
+========================================== -->
+
+{% if message %}
+
+<div class="success-message">
+
+    <span>✓</span>
+
+    {{ message }}
+
+</div>
+
+{% endif %}
+
+
+<!-- ==========================================
+     WELCOME
+========================================== -->
+
+<section class="welcome-section">
+
+    <div>
+
+        <p class="eyebrow">
+            PERFORMANCE OVERVIEW
+        </p>
+
+        <h2>
+            Your Student Dashboard
+        </h2>
+
+        <p>
+            Track marks, analyze performance
+            and manage student records.
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- ==========================================
+     STATISTICS
+========================================== -->
+
+<section class="stats-grid">
+
+
+    <div class="stat-card">
+
+        <div class="stat-top">
+
+            <span class="stat-label">
+                Students
+            </span>
+
+            <span class="stat-symbol">
+                👨‍🎓
+            </span>
+
+        </div>
+
+        <div class="stat-value">
+            {{ total_students }}
+        </div>
+
+        <div class="stat-description">
+            Total registered students
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-top">
+
+            <span class="stat-label">
+                Average
+            </span>
+
+            <span class="stat-symbol">
+                📊
+            </span>
+
+        </div>
+
+        <div class="stat-value">
+            {{ average_marks }}
+        </div>
+
+        <div class="stat-description">
+            Overall average marks
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-top">
+
+            <span class="stat-label">
+                Highest
+            </span>
+
+            <span class="stat-symbol">
+                🏆
+            </span>
+
+        </div>
+
+        <div class="stat-value">
+            {{ highest_marks }}
+        </div>
+
+        <div class="stat-description">
+            Highest marks recorded
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-top">
+
+            <span class="stat-label">
+                Pass Rate
+            </span>
+
+            <span class="stat-symbol">
+                ✅
+            </span>
+
+        </div>
+
+        <div class="stat-value">
+
+            {% if total_students > 0 %}
+
+                {{ ((passed_students / total_students) * 100) | round(1) }}%
+
+            {% else %}
+
+                0%
+
+            {% endif %}
+
+        </div>
+
+        <div class="stat-description">
+            Students with passing average
+        </div>
+
+    </div>
+
+
+</section>
+
+
+<!-- ==========================================
+     ANALYTICS
+========================================== -->
+
+<section class="section-heading">
+
+    <div>
+
+        <p class="eyebrow">
+            ANALYTICS
+        </p>
+
+        <h2>
+            Performance Insights
+        </h2>
+
+    </div>
+
+</section>
+
+
+<section class="analytics-grid">
+
+
+    <!-- GRADE CHART -->
+
+    <div class="panel chart-panel">
+
+        <div class="panel-header">
+
+            <div>
+
+                <h3>
+                    Grade Distribution
+                </h3>
+
+                <p>
+                    Overall student grades
+                </p>
+
+            </div>
+
+            <span class="panel-icon">
+                📊
+            </span>
+
+        </div>
+
+
+        <div class="chart-wrapper">
+
+            <canvas id="gradeChart"></canvas>
+
+        </div>
+
+    </div>
+
+
+    <!-- SUBJECT CHART -->
+
+    <div class="panel chart-panel">
+
+        <div class="panel-header">
+
+            <div>
+
+                <h3>
+                    Subject Performance
+                </h3>
+
+                <p>
+                    Average marks by subject
+                </p>
+
+            </div>
+
+            <span class="panel-icon">
+                📈
+            </span>
+
+        </div>
+
+
+        <div class="chart-wrapper">
+
+            <canvas id="subjectChart"></canvas>
+
+        </div>
+
+    </div>
+
+
+</section>
+
+
+<!-- ==========================================
+     TOP PERFORMER + SUBJECTS
+========================================== -->
+
+<section class="two-column-section">
+
+
+    <!-- TOP PERFORMER -->
+
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <div>
+
+                <h3>
+                    Top Performer
+                </h3>
+
+                <p>
+                    Highest overall average
+                </p>
+
+            </div>
+
+            <span class="panel-icon">
+                🏆
+            </span>
+
+        </div>
+
+
+        {% if top_student %}
+
+
+        <div class="top-performer">
+
+
+            <div class="winner-icon">
+                🏆
+            </div>
+
+
+            <div class="winner-details">
+
+                <h3>
+                    {{ top_student["name"] }}
+                </h3>
+
+                <p>
+                    {{ top_student["subject_count"] }}
+                    subject(s)
+                </p>
+
+            </div>
+
+
+            <div class="winner-score">
+
+                <strong>
+                    {{ top_student["average"] }}
+                </strong>
+
+                <span>
+                    / 100
+                </span>
+
+            </div>
+
+
+        </div>
+
+
+        {% else %}
+
+
+        <div class="empty-box">
+
+            No students yet.
+
+        </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+
+    <!-- SUBJECT PERFORMANCE -->
+
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <div>
+
+                <h3>
+                    Subject Performance
+                </h3>
+
+                <p>
+                    Average marks
+                </p>
+
+            </div>
+
+            <span class="panel-icon">
+                📚
+            </span>
+
+        </div>
+
+
+        {% if subject_averages %}
+
+
+        <div class="subject-list">
+
+
+            {% for item in subject_averages %}
+
+
+            <div class="subject-item">
+
+
+                <div class="subject-item-top">
+
+                    <strong>
+                        {{ item["subject"] }}
+                    </strong>
+
+                    <span>
+                        {{ item["average"] }}
+                    </span>
+
+                </div>
+
+
+                <div class="mini-progress">
+
+                    <div
+                        class="mini-progress-fill"
+                        style="width: {{ item['average'] }}%;"
+                    ></div>
+
+                </div>
+
+
+            </div>
+
+
+            {% endfor %}
+
+
+        </div>
+
+
+        {% else %}
+
+
+        <div class="empty-box">
+
+            No subject data yet.
+
+        </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+
+</section>
+
+
+<!-- ==========================================
+     ADD STUDENT
+========================================== -->
+
+<section class="panel add-panel">
+
+
+    <div class="panel-header">
+
+        <div>
+
+            <p class="eyebrow">
+                DATA ENTRY
+            </p>
+
+            <h3>
+                Add New Student
+            </h3>
+
+            <p>
+                Add a student and multiple subjects
+                at once.
+            </p>
+
+        </div>
+
+        <span class="large-panel-icon">
+            ➕
+        </span>
+
+    </div>
+
+
+    <form
+        method="POST"
+        action="/"
+        onsubmit="return validateStudentForm()"
+    >
+
+
+        <div class="form-group">
+
+            <label>
+                Student Name
+            </label>
+
+            <input
+                type="text"
+                name="name"
+                placeholder="Enter student name"
+                minlength="2"
+                maxlength="50"
+                required
+            >
+
+        </div>
+
+
+        <div class="subjects-heading">
+
+            <h4>
+                Subjects & Marks
+            </h4>
+
+            <span>
+                Add multiple subjects
+            </span>
+
+        </div>
+
+
+        <div id="subjects-container">
+
+
+            <div class="subject-input-row">
+
+
+                <input
+                    type="text"
+                    name="subject"
+                    placeholder="Subject name"
+                    minlength="2"
+                    maxlength="50"
+                    required
+                >
+
+
+                <input
+                    type="number"
+                    name="marks"
+                    placeholder="Marks"
+                    min="0"
+                    max="100"
+                    step="1"
+                    required
+                >
+
+
+                <button
+                    type="button"
+                    class="remove-subject"
+                    onclick="removeSubject(this)"
+                >
+                    ✕
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+        <button
+            type="button"
+            class="add-subject-btn"
+            onclick="addSubject()"
+        >
+
+            ＋ Add Another Subject
+
+        </button>
+
+
+        <button
+            type="submit"
+            class="save-btn"
+        >
+
+            💾 Save Student
+
+        </button>
+
+
+    </form>
+
+
+</section>
+
+
+<!-- ==========================================
+     SEARCH
+========================================== -->
+
+<section class="panel search-panel">
+
+
+    <div class="panel-header">
+
+        <div>
+
+            <p class="eyebrow">
+                FIND RECORDS
+            </p>
+
+            <h3>
+                Search & Filter
+            </h3>
+
+        </div>
+
+        <span class="panel-icon">
+            🔎
+        </span>
+
+    </div>
+
+
+    <form
+        method="GET"
+        action="/"
+        class="filter-form"
+    >
+
+
+        <div>
+
+            <label>
+                Search
+            </label>
+
+            <input
+                type="text"
+                name="search"
+                value="{{ search }}"
+                placeholder="Student or subject"
+            >
+
+        </div>
+
+
+        <div>
+
+            <label>
+                Grade
+            </label>
+
+            <select name="grade">
+
+
+                <option value="">
+                    All Grades
+                </option>
+
+
+                <option
+                    value="A+"
+                    {% if grade_filter == "A+" %}
+                    selected
+                    {% endif %}
+                >
+                    A+
+                </option>
+
+
+                <option
+                    value="A"
+                    {% if grade_filter == "A" %}
+                    selected
+                    {% endif %}
+                >
+                    A
+                </option>
+
+
+                <option
+                    value="B"
+                    {% if grade_filter == "B" %}
+                    selected
+                    {% endif %}
+                >
+                    B
+                </option>
+
+
+                <option
+                    value="C"
+                    {% if grade_filter == "C" %}
+                    selected
+                    {% endif %}
+                >
+                    C
+                </option>
+
+
+                <option
+                    value="D"
+                    {% if grade_filter == "D" %}
+                    selected
+                    {% endif %}
+                >
+                    D
+                </option>
+
+
+                <option
+                    value="F"
+                    {% if grade_filter == "F" %}
+                    selected
+                    {% endif %}
+                >
+                    F
+                </option>
+
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-actions">
+
+            <button
+                type="submit"
+                class="search-btn"
+            >
+                🔎 Search
+            </button>
+
+
+            <a
+                href="/"
+                class="clear-btn"
+            >
+                Clear
+            </a>
+
+        </div>
+
+
+    </form>
+
+
+</section>
+
+
+<!-- ==========================================
+     STUDENT RECORDS
+========================================== -->
+
+<section class="panel records-panel">
+
+
+    <div class="panel-header">
+
+        <div>
+
+            <p class="eyebrow">
+                DATABASE
+            </p>
+
+            <h3>
+                Student Records
+            </h3>
+
+            <p>
+                Manage all saved student performance
+                records.
+            </p>
+
+        </div>
+
+
+        <a
+            href="/export"
+            class="export-btn"
+        >
+            📥 Export CSV
+        </a>
+
+    </div>
+
+
+    {% if students %}
+
+
+    <div class="records-list">
+
+
+        {% for student in students %}
+
+
+        <article class="record-card">
+
+
+            <div class="record-top">
+
+
+                <div class="student-identity">
+
+                    <div class="student-avatar">
+                        {{ student["name"][0] | upper }}
+                    </div>
+
+
+                    <div>
+
+                        <h3>
+                            {{ student["name"] }}
+                        </h3>
+
+                        <p>
+                            {{ student["subject_count"] }}
+                            subject(s)
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="average-display">
+
+                    <strong>
+                        {{ student["average"] }}
+                    </strong>
+
+                    <span>
+                        Overall
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+            <div class="record-subjects">
+
+
+                {% for subject in student["subjects"] %}
+
+
+                <div class="record-subject">
+
+
+                    <span class="record-subject-name">
+
+                        {{ subject["subject"] }}
+
+                    </span>
+
+
+                    <strong>
+
+                        {{ subject["marks"] }}
+
+                    </strong>
+
+
+                    <span class="grade-badge">
+
+                        {{ subject["grade"] }}
+
+                    </span>
+
+
+                </div>
+
+
+                {% endfor %}
+
+
+            </div>
+
+
+            <div class="record-actions">
+
+
+                <a
+                    href="/report/{{ student['id'] }}"
+                    class="action report-action"
+                >
+                    📊 Report
+                </a>
+
+
+                <a
+                    href="/edit/{{ student['id'] }}"
+                    class="action edit-action"
+                >
+                    ✏️ Edit
+                </a>
+
+
+                <form
+                    method="POST"
+                    action="/delete/{{ student['id'] }}"
+                >
+
+                    <button
+                        type="submit"
+                        class="action delete-action"
+                        onclick="return confirmDelete('{{ student['name'] }}')"
+                    >
+                        🗑️ Delete
+                    </button>
+
+                </form>
+
+
+            </div>
+
+
+        </article>
+
+
+        {% endfor %}
+
+
+    </div>
+
+
+    {% else %}
+
+
+    <div class="empty-records">
+
+        <div>
+            📋
+        </div>
+
+        <h3>
+            No Student Records
+        </h3>
+
+        <p>
+            Add your first student above
+            to start tracking performance.
+        </p>
+
+    </div>
+
+
+    {% endif %}
+
+
+</section>
+
+
+<!-- ==========================================
+     FOOTER
+========================================== -->
+
+<footer>
+
+    <div class="footer-line"></div>
+
+    <p>
+        Student Performance Tracker
+    </p>
+
+    <span>
+        Built with Python • Flask • SQLite
+    </span>
+
+</footer>
+
+
+</div>
+
+
+<!-- ==========================================
+     JAVASCRIPT
+========================================== -->
+
+<script>
+
+
+/* ==========================================
+   ADD SUBJECT
+========================================== */
+
+function addSubject() {
+
+    const container =
+        document.getElementById(
+            "subjects-container"
+        );
+
+
+    const row =
+        document.createElement("div");
+
+
+    row.className =
+        "subject-input-row";
+
+
+    row.innerHTML = `
+
+        <input
+            type="text"
+            name="subject"
+            placeholder="Subject name"
+            minlength="2"
+            maxlength="50"
+            required
+        >
+
+        <input
+            type="number"
+            name="marks"
+            placeholder="Marks"
+            min="0"
+            max="100"
+            step="1"
+            required
+        >
+
+        <button
+            type="button"
+            class="remove-subject"
+            onclick="removeSubject(this)"
+        >
+            ✕
+        </button>
+
+    `;
+
+
+    container.appendChild(row);
+
+}
+
+
+/* ==========================================
+   REMOVE SUBJECT
+========================================== */
+
+function removeSubject(button) {
+
+    const container =
+        document.getElementById(
+            "subjects-container"
+        );
+
+
+    const rows =
+        container.querySelectorAll(
+            ".subject-input-row"
+        );
+
+
+    if (rows.length > 1) {
+
+        button.parentElement.remove();
+
+    }
+
+}
+
+
+/* ==========================================
+   FRONTEND VALIDATION
+========================================== */
+
+function validateStudentForm() {
+
+    const marksInputs =
+        document.querySelectorAll(
+            'input[name="marks"]'
+        );
+
+
+    for (
+        let i = 0;
+        i < marksInputs.length;
+        i++
+    ) {
+
+        const marks =
+            Number(
+                marksInputs[i].value
+            );
+
+
+        if (
+            isNaN(marks) ||
+            marks < 0 ||
+            marks > 100
+        ) {
+
+            alert(
+                "Marks must be between 0 and 100."
+            );
+
+            marksInputs[i].focus();
+
+            return false;
+
+        }
+
+    }
+
+
+    const subjects =
+        document.querySelectorAll(
+            'input[name="subject"]'
+        );
+
+
+    const subjectNames = [];
+
+
+    for (
+        let i = 0;
+        i < subjects.length;
+        i++
+    ) {
+
+        const subject =
+            subjects[i].value
+                .trim()
+                .toLowerCase();
+
+
+        if (
+            subjectNames.includes(subject)
+        ) {
+
+            alert(
+                "Duplicate subjects are not allowed."
+            );
+
+            subjects[i].focus();
+
+            return false;
+
+        }
+
+
+        subjectNames.push(subject);
+
+    }
+
+
+    return true;
+
+}
+
+
+/* ==========================================
+   DELETE CONFIRMATION
+========================================== */
+
+function confirmDelete(studentName) {
+
+    return confirm(
+
+        "Are you sure you want to delete " +
+        studentName +
+        "?\n\n" +
+
+        "All subjects and marks for this " +
+        "student will also be deleted."
+
+    );
+
+}
+
+
+/* ==========================================
+   GRADE CHART
+========================================== */
+
+const gradeLabels =
+    {{ chart_grade_labels | tojson }};
+
+
+const gradeValues =
+    {{ chart_grade_values | tojson }};
+
+
+const gradeCanvas =
+    document.getElementById(
+        "gradeChart"
+    );
+
+
+if (
+    gradeCanvas &&
+    typeof Chart !== "undefined"
+) {
+
+    new Chart(
+
+        gradeCanvas,
+
+        {
+
+            type: "doughnut",
+
+            data: {
+
+                labels:
+                    gradeLabels,
+
+                datasets: [
+
+                    {
+
+                        label:
+                            "Students",
+
+                        data:
+                            gradeValues,
+
+                        borderWidth:
+                            2
+
+                    }
+
+                ]
+
+            },
+
+
+            options: {
+
+                responsive:
+                    true,
+
+                maintainAspectRatio:
+                    false,
+
+                cutout:
+                    "65%",
+
+                plugins: {
+
+                    legend: {
+
+                        position:
+                            "bottom",
+
+                        labels: {
+
+                            padding:
+                                18
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
+
+}
+
+
+/* ==========================================
+   SUBJECT CHART
+========================================== */
+
+const subjectLabels =
+    {{ chart_subject_labels | tojson }};
+
+
+const subjectValues =
+    {{ chart_subject_values | tojson }};
+
+
+const subjectCanvas =
+    document.getElementById(
+        "subjectChart"
+    );
+
+
+if (
+    subjectCanvas &&
+    typeof Chart !== "undefined"
+) {
+
+    new Chart(
+
+        subjectCanvas,
+
+        {
+
+            type: "bar",
+
+            data: {
+
+                labels:
+                    subjectLabels,
+
+                datasets: [
+
+                    {
+
+                        label:
+                            "Average Marks",
+
+                        data:
+                            subjectValues,
+
+                        borderRadius:
+                            8,
+
+                        borderSkipped:
+                            false
+
+                    }
+
+                ]
+
+            },
+
+
+            options: {
+
+                responsive:
+                    true,
+
+                maintainAspectRatio:
+                    false,
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero:
+                            true,
+
+                        max:
+                            100,
+
+                        ticks: {
+
+                            stepSize:
+                                20
+
+                        }
+
+                    }
+
+                },
+
+
+                plugins: {
+
+                    legend: {
+
+                        display:
+                            false
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
