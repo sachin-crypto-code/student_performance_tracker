@@ -1,0 +1,1199 @@
+from flask import Flask, render_template, request, redirect, Response
+import sqlite3
+import csv
+import io
+import re
+
+app = Flask(__name__)
+
+DATABASE = "studentmarkstracker.db"
+
+
+# ==========================================
+# DATABASE CONNECTION
+# ==========================================
+
+def get_db():
+    connection = sqlite3.connect(DATABASE)
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA foreign_keys = ON")
+    return connection
+
+
+# ==========================================
+# GRADE CALCULATION
+# ==========================================
+
+def calculate_grade(marks):
+
+    if marks >= 90:
+        return "A+"
+    elif marks >= 80:
+        return "A"
+    elif marks >= 70:
+        return "B"
+    elif marks >= 60:
+        return "C"
+    elif marks >= 50:
+        return "D"
+    else:
+        return "F"
+
+
+# ==========================================
+# INPUT VALIDATION
+# ==========================================
+
+def validate_name(name):
+
+    name = name.strip()
+
+    if not name:
+        return False, "Student name cannot be empty."
+
+    if len(name) < 2:
+        return False, "Student name must contain at least 2 characters."
+
+    if len(name) > 50:
+        return False, "Student name is too long."
+
+    if not re.fullmatch(
+        r"[A-Za-z][A-Za-z .'-]*",
+        name
+    ):
+        return False, "Student name contains invalid characters."
+
+    return True, ""
+
+
+def validate_subject(subject):
+
+    subject = subject.strip()
+
+    if not subject:
+        return False, "Subject name cannot be empty."
+
+    if len(subject) < 2:
+        return False, "Subject name must contain at least 2 characters."
+
+    if len(subject) > 50:
+        return False, "Subject name is too long."
+
+    if not re.fullmatch(
+        r"[A-Za-z0-9][A-Za-z0-9 .&()'-]*",
+        subject
+    ):
+        return False, "Subject name contains invalid characters."
+
+    return True, ""
+
+
+def validate_marks(marks):
+
+    try:
+        marks = int(marks)
+    except (ValueError, TypeError):
+        return False, "Marks must be a valid number."
+
+    if marks < 0 or marks > 100:
+        return False, "Marks must be between 0 and 100."
+
+    return True, ""
+
+
+def validate_subject_list(subjects):
+
+    cleaned_subjects = []
+
+    for subject in subjects:
+
+        subject = subject.strip()
+
+        if not subject:
+            continue
+
+        subject_lower = subject.lower()
+
+        if subject_lower in cleaned_subjects:
+            return False, "Duplicate subjects are not allowed."
+
+        cleaned_subjects.append(subject_lower)
+
+    return True, ""
+
+
+# ==========================================
+# DATABASE SETUP + MIGRATION
+# ==========================================
+
+def create_database():
+
+    connection = get_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT name
+        FROM sqlite_master
+        WHERE type = 'table'
+        AND name = 'students'
+    """)
+
+    students_exists = cursor.fetchone() is not None
+
+    if not students_exists:
+
+        cursor.execute("""
+            CREATE TABLE students (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE subject_marks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL,
+                subject TEXT NOT NULL,
+                marks INTEGER NOT NULL,
+                grade TEXT NOT NULL,
+
+                FOREIGN KEY(student_id)
+                REFERENCES students(id)
+                ON DELETE CASCADE
+            )
+        """)
+
+        connection.commit()
+        connection.close()
+        return
+
+    cursor.execute("PRAGMA table_info(students)")
+
+    columns = [
+        row["name"]
+        for row in cursor.fetchall()
+    ]
+
+    if "subject" not in columns:
+
+        connection.close()
+        return
+
+    print("Old database detected.")
+    print("Migrating existing records...")
+
+    cursor.execute("""
+        ALTER TABLE students
+        RENAME TO old_students
+    """)
+
+    cursor.execute("""
+        CREATE TABLE students (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE subject_marks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id INTEGER NOT NULL,
+            subject TEXT NOT NULL,
+            marks INTEGER NOT NULL,
+            grade TEXT NOT NULL,
+
+            FOREIGN KEY(student_id)
+            REFERENCES students(id)
+            ON DELETE CASCADE
+        )
+    """)
+
+    old_records = cursor.execute("""
+        SELECT name, subject, marks, grade
+        FROM old_students
+    """).fetchall()
+
+    for record in old_records:
+
+        cursor.execute("""
+            INSERT OR IGNORE INTO students (name)
+            VALUES (?)
+        """, (record["name"],))
+
+        student = cursor.execute("""
+            SELECT id
+            FROM students
+            WHERE name = ?
+        """, (record["name"],)).fetchone()
+
+        cursor.execute("""
+            INSERT INTO subject_marks
+            (student_id, subject, marks, grade)
+            VALUES (?, ?, ?, ?)
+        """, (
+            student["id"],
+            record["subject"],
+            record["marks"],
+            record["grade"]
+        ))
+
+    cursor.execute("""
+        DROP TABLE old_students
+    """)
+
+    connection.commit()
+    connection.close()
+
+    print("Database migration completed successfully.")
+
+
+# ==========================================
+# HOME
+# ==========================================
+
+@app.route("/", methods=["GET", "POST"])
+def home():
+
+    message = ""
+
+    # ======================================
+    # ADD STUDENT
+    # ======================================
+
+    if request.method == "POST":
+
+        name = request.form.get(
+            "name",
+            ""
+        ).strip()
+
+        subjects = request.form.getlist(
+            "subject"
+        )
+
+        marks_values = request.form.getlist(
+            "marks"
+        )
+
+        # Validate student name
+
+        valid_name, name_error = validate_name(name)
+
+        if not valid_name:
+
+            message = name_error
+
+        else:
+
+            valid_subjects = []
+            validation_error = ""
+
+            # Validate each subject/mark pair
+
+            for subject, marks in zip(
+                subjects,
+                marks_values
+            ):
+
+                subject = subject.strip()
+                marks = marks.strip()
+
+                # Ignore completely empty rows
+
+                if not subject and not marks:
+                    continue
+
+                valid_subject, subject_error = validate_subject(
+                    subject
+                )
+
+                if not valid_subject:
+
+                    validation_error = subject_error
+                    break
+
+                valid_marks, marks_error = validate_marks(
+                    marks
+                )
+
+                if not valid_marks:
+
+                    validation_error = marks_error
+                    break
+
+                valid_subjects.append(
+                    (subject, int(marks))
+                )
+
+            if validation_error:
+
+                message = validation_error
+
+            elif not valid_subjects:
+
+                message = (
+                    "Please add at least one "
+                    "valid subject and marks."
+                )
+
+            else:
+
+                # Check duplicate subjects
+
+                subject_names = [
+                    item[0]
+                    for item in valid_subjects
+                ]
+
+                subjects_valid, subject_error = (
+                    validate_subject_list(
+                        subject_names
+                    )
+                )
+
+                if not subjects_valid:
+
+                    message = subject_error
+
+                else:
+
+                    connection = get_db()
+
+                    try:
+
+                        # Check duplicate student
+
+                        existing_student = connection.execute(
+                            """
+                            SELECT id
+                            FROM students
+                            WHERE LOWER(name) = LOWER(?)
+                            """,
+                            (name,)
+                        ).fetchone()
+
+                        if existing_student:
+
+                            message = (
+                                "A student with this "
+                                "name already exists."
+                            )
+
+                        else:
+
+                            cursor = connection.execute(
+                                """
+                                INSERT INTO students (name)
+                                VALUES (?)
+                                """,
+                                (name,)
+                            )
+
+                            student_id = cursor.lastrowid
+
+                            for subject, marks in valid_subjects:
+
+                                grade = calculate_grade(
+                                    marks
+                                )
+
+                                connection.execute(
+                                    """
+                                    INSERT INTO subject_marks
+                                    (student_id, subject, marks, grade)
+                                    VALUES (?, ?, ?, ?)
+                                    """,
+                                    (
+                                        student_id,
+                                        subject,
+                                        marks,
+                                        grade
+                                    )
+                                )
+
+                            connection.commit()
+
+                            message = (
+                                "Student added successfully! ✅"
+                            )
+
+                    except sqlite3.IntegrityError:
+
+                        connection.rollback()
+
+                        message = (
+                            "Unable to save the student. "
+                            "Please check the entered data."
+                        )
+
+                    finally:
+
+                        connection.close()
+
+    # ======================================
+    # SEARCH
+    # ======================================
+
+    search = request.args.get(
+        "search",
+        ""
+    ).strip()
+
+    grade_filter = request.args.get(
+        "grade",
+        ""
+    ).strip()
+
+    connection = get_db()
+
+    if search or grade_filter:
+
+        query = """
+            SELECT DISTINCT
+                students.id,
+                students.name
+
+            FROM students
+
+            JOIN subject_marks
+            ON students.id = subject_marks.student_id
+
+            WHERE 1 = 1
+        """
+
+        parameters = []
+
+        if search:
+
+            query += """
+                AND (
+                    students.name LIKE ?
+                    OR subject_marks.subject LIKE ?
+                )
+            """
+
+            search_value = "%" + search + "%"
+
+            parameters.append(search_value)
+            parameters.append(search_value)
+
+        if grade_filter:
+
+            query += """
+                AND subject_marks.grade = ?
+            """
+
+            parameters.append(
+                grade_filter
+            )
+
+        query += """
+            ORDER BY students.id DESC
+        """
+
+        students = connection.execute(
+            query,
+            parameters
+        ).fetchall()
+
+    else:
+
+        students = connection.execute("""
+            SELECT id, name
+            FROM students
+            ORDER BY id DESC
+        """).fetchall()
+
+    # ======================================
+    # BUILD STUDENT DATA
+    # ======================================
+
+    student_data = []
+
+    for student in students:
+
+        subject_rows = connection.execute("""
+            SELECT *
+            FROM subject_marks
+            WHERE student_id = ?
+            ORDER BY id
+        """, (student["id"],)).fetchall()
+
+        if grade_filter:
+
+            subject_rows = [
+                row
+                for row in subject_rows
+                if row["grade"] == grade_filter
+            ]
+
+        if search:
+
+            matching_rows = []
+
+            for row in subject_rows:
+
+                if (
+                    search.lower()
+                    in row["subject"].lower()
+                    or search.lower()
+                    in student["name"].lower()
+                ):
+
+                    matching_rows.append(row)
+
+            subject_rows = matching_rows
+
+        if not subject_rows:
+            continue
+
+        marks_list = [
+            row["marks"]
+            for row in subject_rows
+        ]
+
+        average = round(
+            sum(marks_list)
+            / len(marks_list),
+            2
+        )
+
+        overall_grade = calculate_grade(
+            round(average)
+        )
+
+        student_data.append({
+
+            "id": student["id"],
+
+            "name": student["name"],
+
+            "subjects": subject_rows,
+
+            "average": average,
+
+            "grade": overall_grade,
+
+            "subject_count":
+                len(subject_rows)
+
+        })
+
+    # ======================================
+    # DASHBOARD STATISTICS
+    # ======================================
+
+    total_students = len(student_data)
+
+    all_marks = []
+
+    for student in student_data:
+
+        for subject in student["subjects"]:
+
+            all_marks.append(
+                subject["marks"]
+            )
+
+    if all_marks:
+
+        average_marks = round(
+            sum(all_marks)
+            / len(all_marks),
+            2
+        )
+
+        highest_marks = max(all_marks)
+
+        lowest_marks = min(all_marks)
+
+        passed_students = sum(
+            1
+            for student in student_data
+            if student["average"] >= 50
+        )
+
+        failed_students = (
+            total_students
+            - passed_students
+        )
+
+    else:
+
+        average_marks = 0
+        highest_marks = 0
+        lowest_marks = 0
+        passed_students = 0
+        failed_students = 0
+
+    # ======================================
+    # TOP STUDENT
+    # ======================================
+
+    if student_data:
+
+        top_student = max(
+            student_data,
+            key=lambda student:
+            student["average"]
+        )
+
+    else:
+
+        top_student = None
+
+    # ======================================
+    # GRADE DISTRIBUTION
+    # ======================================
+
+    grade_counts = {
+        "A+": 0,
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "F": 0
+    }
+
+    for student in student_data:
+
+        grade_counts[
+            student["grade"]
+        ] += 1
+
+    # ======================================
+    # SUBJECT ANALYTICS
+    # ======================================
+
+    subject_data = {}
+
+    for student in student_data:
+
+        for subject in student["subjects"]:
+
+            subject_name = subject["subject"]
+
+            marks = subject["marks"]
+
+            if subject_name not in subject_data:
+
+                subject_data[
+                    subject_name
+                ] = []
+
+            subject_data[
+                subject_name
+            ].append(marks)
+
+    subject_averages = []
+
+    for subject, marks in subject_data.items():
+
+        average = round(
+            sum(marks)
+            / len(marks),
+            2
+        )
+
+        subject_averages.append({
+
+            "subject": subject,
+
+            "average": average,
+
+            "count": len(marks)
+
+        })
+
+    subject_averages.sort(
+        key=lambda item:
+        item["average"],
+        reverse=True
+    )
+
+    # ======================================
+    # CHART DATA
+    # ======================================
+
+    chart_grade_labels = [
+        "A+",
+        "A",
+        "B",
+        "C",
+        "D",
+        "F"
+    ]
+
+    chart_grade_values = [
+        grade_counts["A+"],
+        grade_counts["A"],
+        grade_counts["B"],
+        grade_counts["C"],
+        grade_counts["D"],
+        grade_counts["F"]
+    ]
+
+    chart_subject_labels = [
+        item["subject"]
+        for item in subject_averages
+    ]
+
+    chart_subject_values = [
+        item["average"]
+        for item in subject_averages
+    ]
+
+    connection.close()
+
+    return render_template(
+
+        "index.html",
+
+        students=student_data,
+
+        message=message,
+
+        total_students=total_students,
+
+        average_marks=average_marks,
+
+        highest_marks=highest_marks,
+
+        lowest_marks=lowest_marks,
+
+        passed_students=passed_students,
+
+        failed_students=failed_students,
+
+        top_student=top_student,
+
+        grade_counts=grade_counts,
+
+        subject_averages=subject_averages,
+
+        chart_grade_labels=chart_grade_labels,
+
+        chart_grade_values=chart_grade_values,
+
+        chart_subject_labels=chart_subject_labels,
+
+        chart_subject_values=chart_subject_values,
+
+        search=search,
+
+        grade_filter=grade_filter
+    )
+
+
+# ==========================================
+# CSV EXPORT
+# ==========================================
+
+@app.route("/export")
+def export_csv():
+
+    connection = get_db()
+
+    records = connection.execute("""
+        SELECT
+            students.name,
+            subject_marks.subject,
+            subject_marks.marks,
+            subject_marks.grade
+        FROM students
+
+        JOIN subject_marks
+        ON students.id = subject_marks.student_id
+
+        ORDER BY students.name,
+                 subject_marks.subject
+    """).fetchall()
+
+    output = io.StringIO()
+
+    writer = csv.writer(output)
+
+    writer.writerow([
+        "Student Name",
+        "Subject",
+        "Marks",
+        "Grade"
+    ])
+
+    for record in records:
+
+        writer.writerow([
+            record["name"],
+            record["subject"],
+            record["marks"],
+            record["grade"]
+        ])
+
+    connection.close()
+
+    csv_data = output.getvalue()
+
+    output.close()
+
+    return Response(
+
+        csv_data,
+
+        mimetype="text/csv",
+
+        headers={
+            "Content-Disposition":
+            "attachment; "
+            "filename=student_records.csv"
+        }
+
+    )
+
+
+# ==========================================
+# STUDENT REPORT
+# ==========================================
+
+@app.route("/report/<int:student_id>")
+def student_report(student_id):
+
+    connection = get_db()
+
+    student = connection.execute("""
+        SELECT *
+        FROM students
+        WHERE id = ?
+    """, (student_id,)).fetchone()
+
+    if student is None:
+
+        connection.close()
+
+        return "Student not found", 404
+
+    subjects = connection.execute("""
+        SELECT *
+        FROM subject_marks
+        WHERE student_id = ?
+        ORDER BY marks DESC
+    """, (student_id,)).fetchall()
+
+    if subjects:
+
+        marks_list = [
+            subject["marks"]
+            for subject in subjects
+        ]
+
+        average = round(
+            sum(marks_list)
+            / len(marks_list),
+            2
+        )
+
+        highest = max(marks_list)
+
+        lowest = min(marks_list)
+
+        passed = sum(
+            1
+            for mark in marks_list
+            if mark >= 50
+        )
+
+        failed = (
+            len(marks_list)
+            - passed
+        )
+
+        overall_grade = calculate_grade(
+            round(average)
+        )
+
+    else:
+
+        average = 0
+        highest = 0
+        lowest = 0
+        passed = 0
+        failed = 0
+        overall_grade = "F"
+
+    connection.close()
+
+    return render_template(
+
+        "report.html",
+
+        student=student,
+
+        subjects=subjects,
+
+        average=average,
+
+        highest=highest,
+
+        lowest=lowest,
+
+        passed=passed,
+
+        failed=failed,
+
+        overall_grade=overall_grade
+
+    )
+
+
+# ==========================================
+# DELETE STUDENT
+# ==========================================
+
+@app.route(
+    "/delete/<int:student_id>",
+    methods=["POST"]
+)
+def delete_student(student_id):
+
+    connection = get_db()
+
+    student = connection.execute("""
+        SELECT name
+        FROM students
+        WHERE id = ?
+    """, (student_id,)).fetchone()
+
+    if student is None:
+
+        connection.close()
+
+        return redirect("/")
+
+    connection.execute(
+        "DELETE FROM students WHERE id = ?",
+        (student_id,)
+    )
+
+    connection.commit()
+    connection.close()
+
+    return redirect("/")
+
+
+# ==========================================
+# EDIT STUDENT
+# ==========================================
+
+@app.route(
+    "/edit/<int:student_id>",
+    methods=["GET", "POST"]
+)
+def edit_student(student_id):
+
+    connection = get_db()
+
+    student = connection.execute("""
+        SELECT *
+        FROM students
+        WHERE id = ?
+    """, (student_id,)).fetchone()
+
+    if student is None:
+
+        connection.close()
+
+        return "Student not found", 404
+
+    if request.method == "POST":
+
+        name = request.form.get(
+            "name",
+            ""
+        ).strip()
+
+        subjects = request.form.getlist(
+            "subject"
+        )
+
+        marks_values = request.form.getlist(
+            "marks"
+        )
+
+        valid_name, name_error = validate_name(name)
+
+        if not valid_name:
+
+            connection.close()
+
+            return name_error
+
+        valid_subjects = []
+        validation_error = ""
+
+        for subject, marks in zip(
+            subjects,
+            marks_values
+        ):
+
+            subject = subject.strip()
+            marks = marks.strip()
+
+            if not subject and not marks:
+                continue
+
+            valid_subject, subject_error = validate_subject(
+                subject
+            )
+
+            if not valid_subject:
+
+                validation_error = subject_error
+                break
+
+            valid_marks, marks_error = validate_marks(
+                marks
+            )
+
+            if not valid_marks:
+
+                validation_error = marks_error
+                break
+
+            valid_subjects.append(
+                (subject, int(marks))
+            )
+
+        if validation_error:
+
+            connection.close()
+
+            return validation_error
+
+        if not valid_subjects:
+
+            connection.close()
+
+            return (
+                "Please add at least "
+                "one valid subject."
+            )
+
+        subject_names = [
+            item[0]
+            for item in valid_subjects
+        ]
+
+        subjects_valid, subject_error = (
+            validate_subject_list(
+                subject_names
+            )
+        )
+
+        if not subjects_valid:
+
+            connection.close()
+
+            return subject_error
+
+        # Check whether another student
+        # already has this name
+
+        duplicate_student = connection.execute(
+            """
+            SELECT id
+            FROM students
+            WHERE LOWER(name) = LOWER(?)
+            AND id != ?
+            """,
+            (
+                name,
+                student_id
+            )
+        ).fetchone()
+
+        if duplicate_student:
+
+            connection.close()
+
+            return (
+                "Another student already "
+                "uses this name."
+            )
+
+        try:
+
+            connection.execute("""
+                UPDATE students
+                SET name = ?
+                WHERE id = ?
+            """, (
+                name,
+                student_id
+            ))
+
+            connection.execute("""
+                DELETE FROM subject_marks
+                WHERE student_id = ?
+            """, (student_id,))
+
+            for subject, marks in valid_subjects:
+
+                grade = calculate_grade(marks)
+
+                connection.execute("""
+                    INSERT INTO subject_marks
+                    (student_id, subject, marks, grade)
+                    VALUES (?, ?, ?, ?)
+                """, (
+                    student_id,
+                    subject,
+                    marks,
+                    grade
+                ))
+
+            connection.commit()
+            connection.close()
+
+            return redirect("/")
+
+        except sqlite3.IntegrityError:
+
+            connection.rollback()
+            connection.close()
+
+            return (
+                "Unable to update the student."
+            )
+
+    subjects = connection.execute("""
+        SELECT *
+        FROM subject_marks
+        WHERE student_id = ?
+        ORDER BY id
+    """, (student_id,)).fetchall()
+
+    connection.close()
+
+    return render_template(
+
+        "edit.html",
+
+        student=student,
+
+        subjects=subjects
+
+    )
+
+
+# ==========================================
+# START
+# ==========================================
+
+if __name__ == "__main__":
+
+    create_database()
+
+    app.run(
+        host="127.0.0.1",
+        port=5000,
+        debug=True
+    )
