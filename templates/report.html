@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {{ student["name"] }} - Student Report
+    </title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+
+<div class="container report-page">
+
+
+<header>
+
+    <div class="header-icon">
+        📊
+    </div>
+
+    <h1>
+        Student Performance Report
+    </h1>
+
+    <p>
+        Detailed academic performance
+    </p>
+
+</header>
+
+
+<!-- STUDENT PROFILE -->
+
+<section class="card profile-card">
+
+
+<div class="profile-icon">
+    👨‍🎓
+</div>
+
+
+<div class="profile-details">
+
+    <h2>
+        {{ student["name"] }}
+    </h2>
+
+    <p>
+        Student ID: {{ student["id"] }}
+    </p>
+
+</div>
+
+
+<div class="report-grade">
+
+    <strong>
+        {{ overall_grade }}
+    </strong>
+
+    <span>
+        Overall Grade
+    </span>
+
+</div>
+
+
+</section>
+
+
+<!-- REPORT STATISTICS -->
+
+<section class="stats-grid">
+
+
+<div class="stat-card">
+
+    <div class="stat-icon">
+        📊
+    </div>
+
+    <div>
+
+        <p>Average</p>
+
+        <h2>
+            {{ average }}
+        </h2>
+
+    </div>
+
+</div>
+
+
+<div class="stat-card">
+
+    <div class="stat-icon">
+        🏆
+    </div>
+
+    <div>
+
+        <p>Highest</p>
+
+        <h2>
+            {{ highest }}
+        </h2>
+
+    </div>
+
+</div>
+
+
+<div class="stat-card">
+
+    <div class="stat-icon">
+        📉
+    </div>
+
+    <div>
+
+        <p>Lowest</p>
+
+        <h2>
+            {{ lowest }}
+        </h2>
+
+    </div>
+
+</div>
+
+
+<div class="stat-card">
+
+    <div class="stat-icon">
+        📚
+    </div>
+
+    <div>
+
+        <p>Subjects</p>
+
+        <h2>
+            {{ subjects|length }}
+        </h2>
+
+    </div>
+
+</div>
+
+
+<div class="stat-card">
+
+    <div class="stat-icon">
+        ✅
+    </div>
+
+    <div>
+
+        <p>Passed</p>
+
+        <h2>
+            {{ passed }}
+        </h2>
+
+    </div>
+
+</div>
+
+
+<div class="stat-card">
+
+    <div class="stat-icon">
+        ❌
+    </div>
+
+    <div>
+
+        <p>Failed</p>
+
+        <h2>
+            {{ failed }}
+        </h2>
+
+    </div>
+
+</div>
+
+
+</section>
+
+
+<!-- SUBJECT REPORT -->
+
+<section class="card">
+
+
+<div class="section-title">
+
+    <span>📚</span>
+
+    <h2>
+        Subject-wise Performance
+    </h2>
+
+</div>
+
+
+{% if subjects %}
+
+
+{% for subject in subjects %}
+
+
+<div class="report-subject">
+
+
+<div class="report-subject-header">
+
+    <strong>
+        {{ subject["subject"] }}
+    </strong>
+
+    <span>
+        {{ subject["marks"] }}/100
+    </span>
+
+    <span class="grade-badge">
+        {{ subject["grade"] }}
+    </span>
+
+</div>
+
+
+<div class="report-progress">
+
+    <div
+        class="report-progress-bar"
+        style="width: {{ subject['marks'] }}%;"
+    ></div>
+
+</div>
+
+
+</div>
+
+
+{% endfor %}
+
+
+{% else %}
+
+<p class="empty-text">
+    No subjects available.
+</p>
+
+{% endif %}
+
+
+</section>
+
+
+<!-- PERFORMANCE SUMMARY -->
+
+<section class="card">
+
+
+<div class="section-title">
+
+    <span>📝</span>
+
+    <h2>
+        Performance Summary
+    </h2>
+
+</div>
+
+
+{% if average >= 90 %}
+
+<p class="summary-text">
+    Excellent performance. The student has
+    demonstrated outstanding academic results.
+</p>
+
+
+{% elif average >= 80 %}
+
+<p class="summary-text">
+    Very good performance. The student has
+    maintained a strong academic level.
+</p>
+
+
+{% elif average >= 70 %}
+
+<p class="summary-text">
+    Good performance. There is a solid academic
+    foundation with room for further improvement.
+</p>
+
+
+{% elif average >= 50 %}
+
+<p class="summary-text">
+    The student has passed overall. Consistent
+    improvement could significantly strengthen
+    the performance.
+</p>
+
+
+{% else %}
+
+<p class="summary-text">
+    The overall result is below the passing level.
+    Additional academic support and improvement
+    are recommended.
+</p>
+
+{% endif %}
+
+
+</section>
+
+
+<!-- BACK -->
+
+<div class="report-actions">
+
+    <a
+        href="/"
+        class="back-btn"
+    >
+        ← Back to Dashboard
+    </a>
+
+</div>
+
+
+<footer>
+
+<p>
+    Student Performance Tracker
+    • Python • Flask • SQLite
+</p>
+
+</footer>
+
+
+</div>
+
+
+</body>
+
+</html>
