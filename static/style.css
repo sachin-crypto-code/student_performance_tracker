@@ -1,0 +1,1708 @@
+/* =========================================================
+   FINAL STUDENT PERFORMANCE DASHBOARD
+========================================================= */
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+html {
+    scroll-behavior: smooth;
+}
+
+
+body {
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: #f4f7fb;
+
+    color: #172033;
+
+    min-height: 100vh;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.dashboard-header {
+    background:
+        linear-gradient(
+            135deg,
+            #111827,
+            #1e293b
+        );
+
+    color: white;
+
+    box-shadow:
+        0 8px 25px
+        rgba(15, 23, 42, 0.15);
+}
+
+
+.header-content {
+    width: 92%;
+
+    max-width: 1100px;
+
+    margin: auto;
+
+    min-height: 90px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 20px;
+}
+
+
+.brand {
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+}
+
+
+.brand-icon {
+    width: 50px;
+
+    height: 50px;
+
+    border-radius: 15px;
+
+    background:
+        rgba(255, 255, 255, 0.12);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 25px;
+}
+
+
+.brand h1 {
+    font-size: 21px;
+
+    letter-spacing: -0.3px;
+}
+
+
+.brand p {
+    color: #94a3b8;
+
+    font-size: 12px;
+
+    margin-top: 2px;
+}
+
+
+.header-status {
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    color: #cbd5e1;
+
+    font-size: 12px;
+
+    padding: 8px 12px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(255, 255, 255, 0.07);
+}
+
+
+.status-dot {
+    width: 7px;
+
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+
+    box-shadow:
+        0 0 8px
+        rgba(34, 197, 94, 0.7);
+}
+
+
+/* =========================================================
+   CONTAINER
+========================================================= */
+
+.container {
+    width: 92%;
+
+    max-width: 1100px;
+
+    margin: auto;
+
+    padding:
+        30px
+        0
+        55px;
+}
+
+
+/* =========================================================
+   SUCCESS
+========================================================= */
+
+.success-message {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    background: #ecfdf5;
+
+    color: #047857;
+
+    border:
+        1px solid
+        #a7f3d0;
+
+    border-radius: 12px;
+
+    padding: 13px 16px;
+
+    margin-bottom: 22px;
+
+    font-weight: 600;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   WELCOME
+========================================================= */
+
+.welcome-section {
+    margin-bottom: 25px;
+}
+
+
+.eyebrow {
+    color: #2563eb;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.2px;
+
+    margin-bottom: 5px;
+}
+
+
+.welcome-section h2 {
+    color: #111827;
+
+    font-size: 29px;
+
+    letter-spacing: -0.7px;
+
+    margin-bottom: 5px;
+}
+
+
+.welcome-section p:not(.eyebrow) {
+    color: #6b7280;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.stats-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 14px;
+
+    margin-bottom: 35px;
+}
+
+
+.stat-card {
+    position: relative;
+
+    overflow: hidden;
+
+    background: white;
+
+    border:
+        1px solid
+        #e5e7eb;
+
+    border-radius: 16px;
+
+    padding: 19px;
+
+    box-shadow:
+        0 5px 18px
+        rgba(15, 23, 42, 0.05);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.stat-card:hover {
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 10px 25px
+        rgba(15, 23, 42, 0.09);
+}
+
+
+.stat-top {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 10px;
+}
+
+
+.stat-label {
+    color: #64748b;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
+}
+
+
+.stat-symbol {
+    width: 35px;
+
+    height: 35px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: #eff6ff;
+
+    font-size: 17px;
+}
+
+
+.stat-value {
+    color: #111827;
+
+    font-size: 28px;
+
+    font-weight: 800;
+
+    line-height: 1.1;
+}
+
+
+.stat-description {
+    color: #94a3b8;
+
+    font-size: 11px;
+
+    margin-top: 5px;
+}
+
+
+/* =========================================================
+   SECTION HEADING
+========================================================= */
+
+.section-heading {
+    margin-bottom: 15px;
+}
+
+
+.section-heading h2 {
+    color: #111827;
+
+    font-size: 21px;
+}
+
+
+/* =========================================================
+   PANELS
+========================================================= */
+
+.panel {
+    background: white;
+
+    border:
+        1px solid
+        #e5e7eb;
+
+    border-radius: 18px;
+
+    padding: 24px;
+
+    box-shadow:
+        0 6px 22px
+        rgba(15, 23, 42, 0.05);
+}
+
+
+.panel-header {
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 20px;
+}
+
+
+.panel-header h3 {
+    color: #111827;
+
+    font-size: 18px;
+
+    margin-bottom: 3px;
+}
+
+
+.panel-header p {
+    color: #94a3b8;
+
+    font-size: 12px;
+}
+
+
+.panel-icon {
+    width: 38px;
+
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background: #eff6ff;
+
+    font-size: 18px;
+}
+
+
+/* =========================================================
+   ANALYTICS
+========================================================= */
+
+.analytics-grid {
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        1fr;
+
+    gap: 18px;
+
+    margin-bottom: 18px;
+}
+
+
+.chart-wrapper {
+    position: relative;
+
+    width: 100%;
+
+    height: 285px;
+}
+
+
+/* =========================================================
+   TWO COLUMN
+========================================================= */
+
+.two-column-section {
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        1fr;
+
+    gap: 18px;
+
+    margin-bottom: 18px;
+}
+
+
+/* =========================================================
+   TOP PERFORMER
+========================================================= */
+
+.top-performer {
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    padding: 17px;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f8fafc,
+            #eef4ff
+        );
+
+    border:
+        1px solid
+        #e5e7eb;
+}
+
+
+.winner-icon {
+    width: 50px;
+
+    height: 50px;
+
+    min-width: 50px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 14px;
+
+    background: #fff7ed;
+
+    font-size: 26px;
+}
+
+
+.winner-details {
+    min-width: 0;
+}
+
+
+.winner-details h3 {
+    color: #111827;
+
+    font-size: 17px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+.winner-details p {
+    color: #94a3b8;
+
+    font-size: 11px;
+}
+
+
+.winner-score {
+    margin-left: auto;
+
+    text-align: right;
+}
+
+
+.winner-score strong {
+    color: #2563eb;
+
+    font-size: 27px;
+}
+
+
+.winner-score span {
+    color: #94a3b8;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   SUBJECT LIST
+========================================================= */
+
+.subject-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 15px;
+}
+
+
+.subject-item-top {
+    display: flex;
+
+    justify-content: space-between;
+
+    margin-bottom: 6px;
+}
+
+
+.subject-item-top strong {
+    color: #374151;
+
+    font-size: 13px;
+}
+
+
+.subject-item-top span {
+    color: #2563eb;
+
+    font-size: 13px;
+
+    font-weight: 800;
+}
+
+
+.mini-progress {
+    height: 8px;
+
+    background: #edf2f7;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+}
+
+
+.mini-progress-fill {
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            #2563eb,
+            #60a5fa
+        );
+
+    border-radius: 20px;
+}
+
+
+/* =========================================================
+   ADD STUDENT
+========================================================= */
+
+.add-panel {
+    margin-bottom: 18px;
+}
+
+
+.large-panel-icon {
+    width: 46px;
+
+    height: 46px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 13px;
+
+    background: #eff6ff;
+
+    font-size: 22px;
+}
+
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+
+label {
+    display: block;
+
+    color: #374151;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    margin-bottom: 7px;
+}
+
+
+input,
+select {
+    width: 100%;
+
+    padding: 13px 14px;
+
+    border:
+        1px solid
+        #d1d5db;
+
+    border-radius: 10px;
+
+    background: #fafafa;
+
+    color: #111827;
+
+    font-family: inherit;
+
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+
+input::placeholder {
+    color: #9ca3af;
+}
+
+
+input:focus,
+select:focus {
+    background: white;
+
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(37, 99, 235, 0.11);
+}
+
+
+.subjects-heading {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 10px;
+}
+
+
+.subjects-heading h4 {
+    color: #374151;
+
+    font-size: 14px;
+}
+
+
+.subjects-heading span {
+    color: #94a3b8;
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   SUBJECT INPUT
+========================================================= */
+
+.subject-input-row {
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        130px
+        42px;
+
+    gap: 9px;
+
+    margin-bottom: 9px;
+}
+
+
+.subject-input-row input {
+    margin: 0;
+}
+
+
+.remove-subject {
+    width: 42px;
+
+    height: 44px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: #fee2e2;
+
+    color: #b91c1c;
+
+    font-size: 16px;
+
+    cursor: pointer;
+}
+
+
+.remove-subject:hover {
+    background: #fecaca;
+}
+
+
+.add-subject-btn {
+    width: 100%;
+
+    padding: 12px;
+
+    margin-top: 4px;
+
+    border:
+        1px dashed
+        #cbd5e1;
+
+    border-radius: 10px;
+
+    background: #f8fafc;
+
+    color: #475569;
+
+    font-weight: 700;
+
+    font-size: 13px;
+
+    cursor: pointer;
+}
+
+
+.add-subject-btn:hover {
+    background: #eff6ff;
+
+    border-color: #93c5fd;
+}
+
+
+.save-btn {
+    width: 100%;
+
+    padding: 14px;
+
+    margin-top: 14px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #1d4ed8
+        );
+
+    color: white;
+
+    font-size: 14px;
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 6px 15px
+        rgba(37, 99, 235, 0.2);
+}
+
+
+.save-btn:hover {
+    background:
+        linear-gradient(
+            135deg,
+            #1d4ed8,
+            #1e40af
+        );
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.search-panel {
+    margin-bottom: 18px;
+}
+
+
+.filter-form {
+    display: grid;
+
+    grid-template-columns:
+        1.5fr
+        1fr
+        auto;
+
+    gap: 13px;
+
+    align-items: end;
+}
+
+
+.filter-actions {
+    display: flex;
+
+    gap: 7px;
+}
+
+
+.search-btn,
+.clear-btn {
+    min-height: 44px;
+
+    border-radius: 9px;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    text-decoration: none;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+}
+
+
+.search-btn {
+    padding: 0 16px;
+
+    border: none;
+
+    background: #2563eb;
+
+    color: white;
+}
+
+
+.clear-btn {
+    padding: 0 15px;
+
+    background: #f1f5f9;
+
+    color: #475569;
+}
+
+
+/* =========================================================
+   RECORDS
+========================================================= */
+
+.records-panel {
+    margin-bottom: 25px;
+}
+
+
+.records-panel .panel-header {
+    align-items: center;
+}
+
+
+.export-btn {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 9px 13px;
+
+    border-radius: 9px;
+
+    background: #059669;
+
+    color: white;
+
+    text-decoration: none;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+.export-btn:hover {
+    background: #047857;
+}
+
+
+.records-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 14px;
+}
+
+
+.record-card {
+    border:
+        1px solid
+        #e5e7eb;
+
+    border-radius: 15px;
+
+    padding: 17px;
+
+    background: #fcfdff;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.record-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 20px
+        rgba(15, 23, 42, 0.07);
+}
+
+
+.record-top {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 14px;
+}
+
+
+.student-identity {
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+    min-width: 0;
+}
+
+
+.student-avatar {
+    width: 43px;
+
+    height: 43px;
+
+    min-width: 43px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #60a5fa
+        );
+
+    color: white;
+
+    font-weight: 800;
+
+    font-size: 17px;
+}
+
+
+.student-identity h3 {
+    color: #111827;
+
+    font-size: 16px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+.student-identity p {
+    color: #94a3b8;
+
+    font-size: 11px;
+}
+
+
+.average-display {
+    text-align: right;
+}
+
+
+.average-display strong {
+    display: block;
+
+    color: #2563eb;
+
+    font-size: 24px;
+
+    line-height: 1;
+}
+
+
+.average-display span {
+    color: #94a3b8;
+
+    font-size: 9px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
+}
+
+
+/* =========================================================
+   RECORD SUBJECTS
+========================================================= */
+
+.record-subjects {
+    border-top:
+        1px solid
+        #edf0f4;
+}
+
+
+.record-subject {
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        60px
+        50px;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 10px 4px;
+
+    border-bottom:
+        1px solid
+        #f0f2f5;
+}
+
+
+.record-subject:last-child {
+    border-bottom: none;
+}
+
+
+.record-subject-name {
+    color: #475569;
+
+    font-size: 13px;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+
+.record-subject strong {
+    color: #111827;
+
+    text-align: right;
+
+    font-size: 13px;
+}
+
+
+.grade-badge {
+    display: inline-flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    min-width: 42px;
+
+    padding: 5px 7px;
+
+    border-radius: 20px;
+
+    background: #eff6ff;
+
+    color: #1d4ed8;
+
+    font-size: 11px;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.record-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding-top: 13px;
+
+    margin-top: 3px;
+
+    border-top:
+        1px solid
+        #edf0f4;
+
+    flex-wrap: wrap;
+}
+
+
+.record-actions form {
+    margin: 0;
+}
+
+
+.action {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 8px 11px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+
+.report-action {
+    background: #111827;
+
+    color: white;
+}
+
+
+.edit-action {
+    background: #2563eb;
+
+    color: white;
+}
+
+
+.delete-action {
+    background: #ef4444;
+
+    color: white;
+}
+
+
+.report-action:hover {
+    background: #030712;
+}
+
+
+.edit-action:hover {
+    background: #1d4ed8;
+}
+
+
+.delete-action:hover {
+    background: #dc2626;
+}
+
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+.empty-box {
+    padding: 30px 15px;
+
+    text-align: center;
+
+    color: #94a3b8;
+
+    background: #f8fafc;
+
+    border-radius: 12px;
+
+    border:
+        1px dashed
+        #d1d5db;
+}
+
+
+.empty-records {
+    padding: 45px 20px;
+
+    text-align: center;
+
+    background: #f8fafc;
+
+    border-radius: 14px;
+
+    border:
+        1px dashed
+        #cbd5e1;
+}
+
+
+.empty-records div {
+    font-size: 35px;
+
+    margin-bottom: 8px;
+}
+
+
+.empty-records h3 {
+    color: #374151;
+
+    font-size: 17px;
+
+    margin-bottom: 4px;
+}
+
+
+.empty-records p {
+    color: #94a3b8;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+footer {
+    text-align: center;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    margin-top: 30px;
+}
+
+
+.footer-line {
+    width: 45px;
+
+    height: 3px;
+
+    border-radius: 10px;
+
+    background: #2563eb;
+
+    margin:
+        0
+        auto
+        10px;
+}
+
+
+footer span {
+    display: block;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+
+    margin-top: 2px;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .stats-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+
+    .analytics-grid,
+    .two-column-section {
+        grid-template-columns: 1fr;
+    }
+
+
+    .filter-form {
+        grid-template-columns:
+            1fr
+            1fr;
+    }
+
+
+    .filter-actions {
+        grid-column: 1 / -1;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .header-content {
+        width: 94%;
+
+        min-height: 75px;
+    }
+
+
+    .brand-icon {
+        width: 43px;
+
+        height: 43px;
+
+        font-size: 21px;
+    }
+
+
+    .brand h1 {
+        font-size: 17px;
+    }
+
+
+    .brand p {
+        font-size: 10px;
+    }
+
+
+    .header-status {
+        display: none;
+    }
+
+
+    .container {
+        width: 94%;
+
+        padding:
+            22px
+            0
+            40px;
+    }
+
+
+    .welcome-section h2 {
+        font-size: 24px;
+    }
+
+
+    .welcome-section p:not(.eyebrow) {
+        font-size: 13px;
+    }
+
+
+    .stats-grid {
+        grid-template-columns:
+            1fr 1fr;
+
+        gap: 9px;
+
+        margin-bottom: 28px;
+    }
+
+
+    .stat-card {
+        padding: 14px;
+
+        border-radius: 13px;
+    }
+
+
+    .stat-symbol {
+        width: 30px;
+
+        height: 30px;
+
+        font-size: 14px;
+    }
+
+
+    .stat-label {
+        font-size: 9px;
+    }
+
+
+    .stat-value {
+        font-size: 23px;
+    }
+
+
+    .stat-description {
+        font-size: 9px;
+    }
+
+
+    .panel {
+        padding: 19px;
+
+        border-radius: 15px;
+    }
+
+
+    .chart-wrapper {
+        height: 250px;
+    }
+
+
+    .top-performer {
+        padding: 14px;
+    }
+
+
+    .winner-score strong {
+        font-size: 23px;
+    }
+
+
+    .filter-form {
+        grid-template-columns: 1fr;
+    }
+
+
+    .filter-actions {
+        grid-column: auto;
+
+        width: 100%;
+    }
+
+
+    .search-btn,
+    .clear-btn {
+        flex: 1;
+    }
+
+
+    .subject-input-row {
+        grid-template-columns:
+            1fr
+            78px
+            38px;
+
+        gap: 6px;
+    }
+
+
+    .subject-input-row input {
+        padding:
+            12px
+            8px;
+
+        font-size: 13px;
+    }
+
+
+    .remove-subject {
+        width: 38px;
+    }
+
+
+    .panel-header {
+        margin-bottom: 16px;
+    }
+
+
+    .panel-header h3 {
+        font-size: 16px;
+    }
+
+
+    .export-btn {
+        padding: 8px 10px;
+
+        font-size: 10px;
+    }
+
+
+    .record-card {
+        padding: 14px;
+    }
+
+
+    .student-avatar {
+        width: 39px;
+
+        height: 39px;
+
+        min-width: 39px;
+    }
+
+
+    .student-identity h3 {
+        font-size: 14px;
+    }
+
+
+    .average-display strong {
+        font-size: 21px;
+    }
+
+
+    .record-subject {
+        grid-template-columns:
+            1fr
+            50px
+            45px;
+    }
+
+
+    .record-actions {
+        display: grid;
+
+        grid-template-columns:
+            1fr 1fr;
+
+        gap: 6px;
+    }
+
+
+    .record-actions form {
+        width: 100%;
+    }
+
+
+    .action {
+        width: 100%;
+
+        padding:
+            9px
+            6px;
+
+        font-size: 10px;
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+========================================================= */
+
+@media (max-width: 380px) {
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .brand h1 {
+        font-size: 15px;
+    }
+
+
+    .subject-input-row {
+        grid-template-columns:
+            1fr
+            68px
+            35px;
+    }
+
+
+    .record-subject {
+        grid-template-columns:
+            1fr
+            45px
+            42px;
+    }
+
+}
