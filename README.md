@@ -73,27 +73,6 @@ student_performance_tracker/
 └── static/
     └── style.css
 
-⚙️ How to Run
-
-1. Clone the Repository
-
-git clone https://github.com/YOUR-USERNAME/student_performance_tracker.git
-
-2. Open the Project Folder
-
-cd student_performance_tracker
-
-3. Install Dependencies
-
-pip install -r requirements.txt
-
-4. Run the Application
-
-python app.py
-
-5. Open in Browser
-
-http://127.0.0.1:5000
 
 📊 Dashboard
 
